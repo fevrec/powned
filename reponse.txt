@@ -1,0 +1,7 @@
+CHAP 1:
+
+1) On obtient cette erreur : "bind socker_serveur : Address already in use" 
+2) on obtient rien
+3) "telnet: Unable to connect to remote host: Connection refused" parce que on demande une coneexion en ipv6 au serveur qui fait des connexions en ipv4
+4) Ce n'est pas possible on ne peut pas connecter plus d'un client à la fois 
+
