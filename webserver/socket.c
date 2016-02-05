@@ -38,4 +38,5 @@ void initialiser_signaux(void) {
 	if ( sigaction ( SIGCHLD , &sa , NULL ) == -1) {
 		perror ( "sigaction ( SIGCHLD )");
 	}
+
 }
