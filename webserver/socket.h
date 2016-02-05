@@ -15,4 +15,5 @@ La fonction retourne -1 en cas d ’ erreur ou le descripteur de la
 socket créée . */
 int creer_serveur ( int port );
 void initialiser_signaux ( void );
+void traitement_signal ( int sig );
 # endif
