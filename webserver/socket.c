@@ -1,6 +1,13 @@
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/wait.h>
+#include <string.h>
 #include "socket.h"
-#include <signal.h>
-
 int creer_serveur ( int port ) {
 	int socket_serveur = socket ( AF_INET , SOCK_STREAM , 0);
 	if ( socket_serveur == -1) {
@@ -27,6 +34,10 @@ int creer_serveur ( int port ) {
 
 
 void traitement_signal(int sig) {
+	int pid;
+	int status;
+	while ((pid=waitpid(-1, &status, WNOHANG)) != -1)
+		kill(pid,SIGKILL);
 	printf( "Signal %d reçu \n",sig);
 }
 
