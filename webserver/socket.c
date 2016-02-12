@@ -50,4 +50,6 @@ void initialiser_signaux(void) {
 		perror ( "sigaction ( SIGCHLD )");
 	}
 
+
+
 }

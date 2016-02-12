@@ -15,6 +15,7 @@ int main (void)
 	initialiser_signaux();	
 	int statut;
 	char *buf = malloc(sizeof(char)*80);
+    //int alreadyDone = 0;
 	while (1) {
 		int socket_client = accept ( socket_serveur , NULL , NULL );
 		if ( socket_client == -1){
@@ -29,10 +30,21 @@ eux de vous annoncer que moi, serveur, s'est connecté à vous meme.\nPuisse le 
 			write ( socket_client , message_bienvenue , strlen ( message_bienvenue ));
 			*/
 	FILE *f = fdopen(socket_client, "r+");
-	fgets(buf, sizeof(buf),f);
-	printf("%s",buf);
+    while (fgets(buf, sizeof(buf),f) != '\0') {
+      /*  if(alreadyDone==0){
+           if(buf[0]=='G'&&buf[1]=='E'&&buf[2]=='T'){
+                printf("oktamer");
+                alreadyDone=1;
+           }
+           else{ 
+                alreadyDone=-1;
+                printf("c buger");
+           }*/
+	    printf("%s",buf);
+        }
+    
 	fflush(stdout);
-	//write ( socket_client, buf , strlen (buf));
+	write ( socket_client, buf , strlen (buf));
 	free(buf);
 
 			return 1;
