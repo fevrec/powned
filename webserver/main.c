@@ -15,7 +15,11 @@ int main (void)
 	initialiser_signaux();	
 	int statut;
 	char *buf = malloc(sizeof(char)*80);
-    //int alreadyDone = 0;
+    int alreadyDone = 0;
+	int troisMot = 0;
+	int cpt=0;
+	int cptLet=0;
+	int i;
 	while (1) {
 		int socket_client = accept ( socket_serveur , NULL , NULL );
 		if ( socket_client == -1){
@@ -30,18 +34,37 @@ eux de vous annoncer que moi, serveur, s'est connecté à vous meme.\nPuisse le 
 			write ( socket_client , message_bienvenue , strlen ( message_bienvenue ));
 			*/
 	FILE *f = fdopen(socket_client, "r+");
-    while (fgets(buf, sizeof(buf),f) != '\0') {
-      /*  if(alreadyDone==0){
+	 
+    while (fgets(buf, sizeof(char)*80,f) != '\0') {
+			for(i=0;i<15;i++){
+				if(troisMot == 0){
+					if(cpt!=3 && buf[i]!='\n'){
+						if(buf[i]==' '){
+							cpt++;
+						}	
+					}
+					else if(cpt==3){
+						troisMot=1;
+						printf("3MotsOK\n");
+					}
+					else{
+						printf("Erreur : Il n'y a pas 3 mots sur la premiere ligne\n");
+					}
+			}
+		}
+		if(alreadyDone==0){
            if(buf[0]=='G'&&buf[1]=='E'&&buf[2]=='T'){
-                printf("oktamer");
+                printf("GetOK\n");
                 alreadyDone=1;
            }
            else{ 
                 alreadyDone=-1;
-                printf("c buger");
-           }*/
+                printf("GetError\n");
+           }
+		}
 	    printf("%s",buf);
         }
+		cptLet++;
     
 	fflush(stdout);
 	write ( socket_client, buf , strlen (buf));
@@ -58,3 +81,4 @@ eux de vous annoncer que moi, serveur, s'est connecté à vous meme.\nPuisse le 
    
 	return 0;
 }	
+
