@@ -15,10 +15,12 @@ int main (void)
 	initialiser_signaux();	
 	int statut;
 	char *buf = malloc(sizeof(char)*80);
-    int alreadyDone = 0;
+    int getDone = 0;
+	int httpDone = 0;
 	int troisMot = 0;
 	int cpt=0;
-	int cptLet=0;
+	char* e400="HTTP/1.1 400 Bad Request\r\nConnection: close\r\nContent-Length: 17\r\n\r\n400 Bad request\r\n";
+	char* w200="HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: 32\r\n\r\nSalut poto \r\n";
 	int i;
 	while (1) {
 		int socket_client = accept ( socket_serveur , NULL , NULL );
@@ -33,41 +35,56 @@ int main (void)
 eux de vous annoncer que moi, serveur, s'est connecté à vous meme.\nPuisse le lien qui nous unis etre aussi fort que l'amour liant Mr java et Madame Eclipse.\nCe message sera envoyé tant que vous me recevrez, tant que vous m'ecouterez de votre oreille attentive...\nPaix et amour, guerre et haine, ne sont que futilitées, nous vivons notre passion comme un arbre perds ses feuilles en automne...\nVive les programmes ! Pro comme professionel, gramme comme le peu qu'il nous faut pour nous faire plaisir. Ajoutez a ces éléments, un peu de feuille marron et blanche afin d'obtenir un moment de paix et d'armonie autour de vous.\nA tout de suite pour un nouveau message !\n" ;
 			write ( socket_client , message_bienvenue , strlen ( message_bienvenue ));
 			*/
-	FILE *f = fdopen(socket_client, "r+");
+	FILE *f = fdopen(socket_client, "w+");
 	 
     while (fgets(buf, sizeof(char)*80,f) != '\0') {
-			for(i=0;i<15;i++){
-				if(troisMot == 0){
-					if(cpt!=3 && buf[i]!='\n'){
-						if(buf[i]==' '){
-							cpt++;
-						}	
-					}
-					else if(cpt==3){
-						troisMot=1;
-						printf("3MotsOK\n");
-					}
-					else{
-						printf("Erreur : Il n'y a pas 3 mots sur la premiere ligne\n");
-					}
+		for(i=0;i<15;i++){
+			if(troisMot == 0){
+				if(cpt!=3 && buf[i]!='\n'){
+					if(buf[i]==' '){
+						cpt++;
+					}	
+				}
+				else if(cpt==3){
+					troisMot=1;
+					printf("3MOTS_OK\n");
+				}
+				else{
+					printf("Erreur : Il n'y a pas 3 mots sur la premiere ligne\n");
+				}
 			}
 		}
-		if(alreadyDone==0){
+		if(getDone==0){
            if(buf[0]=='G'&&buf[1]=='E'&&buf[2]=='T'){
-                printf("GetOK\n");
-                alreadyDone=1;
+                printf("GET_OK\n");
+                getDone=1;
            }
            else{ 
-                alreadyDone=-1;
-                printf("GetError\n");
+                getDone=-1;
+                printf("GET_ERROR\n");
            }
 		}
-	    printf("%s",buf);
-        }
-		cptLet++;
-    
+		if(httpDone==0){
+			if(buf[6]=='H'&&buf[7]=='T'&&buf[8]=='T'&&buf[9]=='P'&&buf[10]=='/'&&buf[11]=='1'&&buf[12]=='.'&&(buf[13]=='0'||buf[13]=='1')){
+			printf("HTTP_OK\n");
+			httpDone=1;
+			}
+			else {
+				printf("HTTP_ERROR");
+				httpDone=-1;
+			}
+		}
+	   // printf("%s",buf);
+		
+    }
+		
+    if(getDone==-1||httpDone==-1||troisMot==-1){
+		fprintf(f,"%s",e400);
+	}
+	else 
+		fprintf(f,"%s",w200);
+		
 	fflush(stdout);
-	write ( socket_client, buf , strlen (buf));
 	free(buf);
 
 			return 1;
@@ -78,7 +95,6 @@ eux de vous annoncer que moi, serveur, s'est connecté à vous meme.\nPuisse le 
             close(socket_client);
 		
 	}
-   
 	return 0;
 }	
 
