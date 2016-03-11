@@ -21,6 +21,7 @@ int main (void)
 	int cpt = 0;
 	char* e400="HTTP/1.1 400 Bad Request\r\nConnection: close\r\nContent-Length: 17\r\n\r\n400 Bad request\r\n";
 	char* w200="HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: 17\r\n\r\nSalut poto ! :)\r\n";
+	char* e404="HTTP/1.1 404 Not Found\r\nConnection: close\r\nContent-Length: 15\r\n\r\n404 Not Found\r\n";
 	
 	while (1) {
 		int socket_client = accept ( socket_serveur , NULL , NULL );
@@ -30,6 +31,7 @@ int main (void)
 		int pid;
 		if ((pid = fork()) == 0) {
 			int i;
+			int error404 = 0;
 			/* On peut maintenant dialoguer avec le client */
 			//sleep(1);
 			/*const char * message_bienvenue = "Mesdames, messieurs,\n client, cliente\nJe suis heureux de vous annoncer que moi, serveur, s'est connecté à vous meme.\nPuisse le lien qui nous unis etre aussi fort que l'amour liant Mr java et Madame Eclipse.\nCe message sera envoyé tant que vous me recevrez, tant que vous m'ecouterez de votre oreille attentive...\nPaix et amour, guerre et haine, ne sont que futilitées, nous vivons notre passion comme un arbre perds ses feuilles en automne...\nVive les programmes ! Pro comme professionel, gramme comme le peu qu'il nous faut pour nous faire plaisir. Ajoutez a ces éléments, un peu de feuille marron et blanche afin d'obtenir un moment de paix et d'armonie autour de vous.\nA tout de suite pour un nouveau message !\n" ;
@@ -67,6 +69,10 @@ int main (void)
                					 getDone=-1;
                					 printf("GET_ERROR\n");
           				 }
+						if (buf[5] != ' ')
+						error404 = 1;
+							
+							
 				}
 				if(httpDone == 0){
 					if(buf[6]=='H'&&buf[7]=='T'&&buf[8]=='T'&&buf[9]=='P'&&buf[10]=='/'&&buf[11]=='1'&&buf[12]=='.'&&(buf[13]=='0'||buf[13]=='1')){
@@ -85,12 +91,13 @@ int main (void)
 	  			break;
    			}
 			
-    			if(getDone == -1 || httpDone == -1 || troisMot==-1){
-				write ( socket_client , e400 , strlen ( e400 ));
-			}
+    		if(error404)
+				write ( 1 , e404 , strlen ( e404 ));
+    			else if(getDone == -1 || httpDone == -1 || troisMot==-1)
+				write ( 1 , e400 , strlen ( e400 ));
 			else 
-				write ( socket_client , w200 , strlen ( w200 ));
-			
+				write ( 1 , w200 , strlen ( w200 ));
+
 			free(buf);
 			fclose(f);
 			return 1;
