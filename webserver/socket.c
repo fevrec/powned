@@ -49,7 +49,96 @@ void initialiser_signaux(void) {
 	if ( sigaction ( SIGCHLD , &sa , NULL ) == -1) {
 		perror ( "sigaction ( SIGCHLD )");
 	}
+}
+char * fgets_or_exit(char * buf , int size , FILE * stream ){
+//VARIABLE 
 
+	int getDone = 0;
+	int httpDone = 0;
+	int troisMot = 0;
+	int cpt = 1;
+	char* e400="HTTP/1.1 400 Bad Request\r\nConnection: close\r\nContent-Length: 17\r\n\r\n400 Bad request\r\n";
+	char* w200="HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: 17\r\n\r\nSalut poto ! :)\r\n";
+	char* e404="HTTP/1.1 404 Not Found\r\nConnection: close\r\nContent-Length: 15\r\n\r\n404 Not Found\r\n";
+	int i;
+	int error404 = 0;
 
+	fgets(buf, size,stream);
+	
+	if(error404)
+		return e404;
+    else if(getDone == -1 || httpDone == -1 || troisMot==-1)
+		return e400;
+	else 
+		return w200;
+		
+}
+
+int parse_http_request(const char * request_line, http_request * request){
+http_request request;
+request.major_version=request_line[11];
+request.minor_version=request_line[13];
+//4. À l’aide de la RFC, trouvez le nom donné aux trois constituant de la première ligne de la
+//requête envoyée par le client.
+
+for(i=0;i<15;i++){
+		if(troisMot == 0){
+			if(cpt!=3 && buf[i]!='\n'){
+				if(buf[i]==' ')
+					cpt++;
+			}
+			else{ 
+				if(cpt==3){
+					troisMot=1;
+					printf("3MOTS_OK\n");
+				}
+				else{
+					troisMot = -1;
+					printf("Erreur : Il n'y a pas 3 mots sur la premiere ligne\n");
+				}
+			}
+		}
+	}
+	if(getDone == 0){
+        if(buf[0]=='G'&&buf[1]=='E'&&buf[2]=='T'){
+            printf("GET_OK\n");
+            getDone=1;
+        }
+        else{ 
+            getDone=-1;
+            printf("GET_ERROR\n");
+        }
+		if (buf[5] != ' ')
+			error404 = 1;			
+	}
+	if(httpDone == 0){
+		if(buf[6]=='H'&&buf[7]=='T'&&buf[8]=='T'&&buf[9]=='P'&&buf[10]=='/'&&buf[11]=='1'&&buf[12]=='.'&&(buf[13]=='0'||buf[13]=='1')){
+			printf("HTTP_OK\n");
+			httpDone=1;
+		}
+		else {
+			printf("HTTP_ERROR");
+			httpDone=-1;
+		}
+	}
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
