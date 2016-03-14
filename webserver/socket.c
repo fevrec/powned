@@ -52,36 +52,28 @@ void initialiser_signaux(void) {
 }
 char * fgets_or_exit(char * buf , int size , FILE * stream ){
 //VARIABLE 
-
-	int getDone = 0;
-	int httpDone = 0;
-	int troisMot = 0;
-	int cpt = 1;
 	char* e400="HTTP/1.1 400 Bad Request\r\nConnection: close\r\nContent-Length: 17\r\n\r\n400 Bad request\r\n";
 	char* w200="HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: 17\r\n\r\nSalut poto ! :)\r\n";
 	char* e404="HTTP/1.1 404 Not Found\r\nConnection: close\r\nContent-Length: 15\r\n\r\n404 Not Found\r\n";
-	int i;
-	int error404 = 0;
-
+	http_request request;
 	fgets(buf, size,stream);
-	
-	if(error404)
+	int erreur = parse_http_request(buf,&request);
+	if(strcmp(request.url,"/") != 0)
 		return e404;
-    else if(getDone == -1 || httpDone == -1 || troisMot==-1)
+    	else if(erreur == 400)
 		return e400;
-	else 
+	else
 		return w200;
 		
 }
 
 int parse_http_request(const char * request_line, http_request * request){
-http_request request;
-request.major_version=request_line[11];
-request.minor_version=request_line[13];
-//4. À l’aide de la RFC, trouvez le nom donné aux trois constituant de la première ligne de la
-//requête envoyée par le client.
-
-for(i=0;i<15;i++){
+	//4. À l’aide de la RFC, trouvez le nom donné aux trois constituant de la première ligne de la
+	//requête envoyée par le client.
+	/*int getDone = 0;
+	int httpDone = 0;
+	int troisMot = 0;
+	for(i=0;i<15;i++){
 		if(troisMot == 0){
 			if(cpt!=3 && buf[i]!='\n'){
 				if(buf[i]==' ')
@@ -120,8 +112,32 @@ for(i=0;i<15;i++){
 			printf("HTTP_ERROR");
 			httpDone=-1;
 		}
-	}
+	}*/
 
+	int i = 0;
+	int taille = strlen(request_line);
+	int cpt = 0;
+	int cpt2 = 0;
+	char ** ligne = malloc(taille);
+	//printf("%s",request_line);
+	printf("%d\n",taille);
+	request->url = "/";
+	while(i<taille && (request_line[i] != '\r' || request_line[i] != '\n')) {
+		if(request_line[i] == ' ') {
+			cpt2++;
+			cpt = 0;
+		}
+		else {
+			ligne[cpt2][cpt] = request_line[i];
+			cpt++;
+		}
+		printf("%d\n",i);
+		i++;
+	}
+	printf("-----------------------------\n");
+	printf("%d\n",i);
+	printf("-----------------------------\n");
+	return 0;
 }
 
 
