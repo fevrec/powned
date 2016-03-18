@@ -32,7 +32,9 @@ void initialiser_signaux ( void );
 void traitement_signal ( int sig );
 
 # endif
-char * fgets_or_exit ( char * buf , int size , FILE * stream );
-int parse_http_request(const char * request_line, http_request * request);
-
+void fgets_or_exit ( char * buf , int size , FILE * stream );
+int parse_http_request(char * request_line, http_request * request);
+void skip_headers ( FILE * client, int size );
+void send_status ( FILE * client , int code , const char * reason_phrase );
+void send_response ( FILE * client , int code , const char * reason_phrase ,const char * message_body );
 

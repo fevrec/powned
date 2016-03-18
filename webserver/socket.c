@@ -50,101 +50,79 @@ void initialiser_signaux(void) {
 		perror ( "sigaction ( SIGCHLD )");
 	}
 }
-char * fgets_or_exit(char * buf , int size , FILE * stream ){
+void fgets_or_exit(char * buf , int size , FILE * stream ){
 //VARIABLE 
-	char* e400="HTTP/1.1 400 Bad Request\r\nConnection: close\r\nContent-Length: 17\r\n\r\n400 Bad request\r\n";
+	/*char* e400="HTTP/1.1 400 Bad Request\r\nConnection: close\r\nContent-Length: 17\r\n\r\n400 Bad request\r\n";
 	char* w200="HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: 17\r\n\r\nSalut poto ! :)\r\n";
-	char* e404="HTTP/1.1 404 Not Found\r\nConnection: close\r\nContent-Length: 15\r\n\r\n404 Not Found\r\n";
+	char* e404="HTTP/1.1 404 Not Found\r\nConnection: close\r\nContent-Length: 15\r\n\r\n404 Not Found\r\n";*/
 	http_request request;
 	fgets(buf, size,stream);
-	int erreur = parse_http_request(buf,&request);
-	if(strcmp(request.url,"/") != 0)
-		return e404;
-    	else if(erreur == 400)
-		return e400;
+
+	char * request_line = malloc(size);
+	strcpy(request_line, buf);
+	skip_headers (stream , size);
+	int bad_request = parse_http_request(request_line,&request);
+
+	if ( bad_request )
+		send_response ( stream , 400 , "Bad Request" , "Bad request\r\n" );
+	else if (request.method == HTTP_UNSUPPORTED )
+		send_response ( stream , 405 , "Method Not Allowed" , "Method Not Allowed\r\n" );
+	else if (strcmp(request.url , "/" ) == 0)
+		send_response ( stream , 200 , "OK" , "Salut poto ! :)\r\n" );
 	else
-		return w200;
-		
+		send_response ( stream , 404 , "Not Found" , "Not Found\r\n" );
 }
 
-int parse_http_request(const char * request_line, http_request * request){
-	//4. À l’aide de la RFC, trouvez le nom donné aux trois constituant de la première ligne de la
-	//requête envoyée par le client.
-	/*int getDone = 0;
-	int httpDone = 0;
-	int troisMot = 0;
-	for(i=0;i<15;i++){
-		if(troisMot == 0){
-			if(cpt!=3 && buf[i]!='\n'){
-				if(buf[i]==' ')
-					cpt++;
-			}
-			else{ 
-				if(cpt==3){
-					troisMot=1;
-					printf("3MOTS_OK\n");
-				}
-				else{
-					troisMot = -1;
-					printf("Erreur : Il n'y a pas 3 mots sur la premiere ligne\n");
-				}
-			}
-		}
-	}
-	if(getDone == 0){
-        if(buf[0]=='G'&&buf[1]=='E'&&buf[2]=='T'){
-            printf("GET_OK\n");
-            getDone=1;
-        }
-        else{ 
-            getDone=-1;
-            printf("GET_ERROR\n");
-        }
-		if (buf[5] != ' ')
-			error404 = 1;			
-	}
-	if(httpDone == 0){
-		if(buf[6]=='H'&&buf[7]=='T'&&buf[8]=='T'&&buf[9]=='P'&&buf[10]=='/'&&buf[11]=='1'&&buf[12]=='.'&&(buf[13]=='0'||buf[13]=='1')){
-			printf("HTTP_OK\n");
-			httpDone=1;
-		}
-		else {
-			printf("HTTP_ERROR");
-			httpDone=-1;
-		}
-	}*/
-
-	int i = 0;
-	int taille = strlen(request_line);
+int parse_http_request(char * request_line, http_request * request){
+	char ** troisMot = malloc(strlen(request_line));
+	char * partie;
 	int cpt = 0;
-	int cpt2 = 0;
-	char ** ligne = malloc(taille);
-	//printf("%s",request_line);
-	printf("%d\n",taille);
-	request->url = "/";
-	while(i<taille && (request_line[i] != '\r' || request_line[i] != '\n')) {
-		if(request_line[i] == ' ') {
-			cpt2++;
-			cpt = 0;
-		}
-		else {
-			ligne[cpt2][cpt] = request_line[i];
-			cpt++;
-		}
-		printf("%d\n",i);
-		i++;
-	}
-	printf("-----------------------------\n");
-	printf("%d\n",i);
-	printf("-----------------------------\n");
-	return 0;
+	const char s[2] = " ";
+	   /* get the first token */
+	partie = strtok(request_line, s);
+	   
+	   /* walk through other tokens */
+	while( partie != NULL )  {
+	    troisMot[cpt] = partie;
+	    cpt++;
+	    partie = strtok(NULL, s);
+	};
+	if(strcmp(troisMot[0], "GET") == 0)
+		request->method = HTTP_GET;
+	else
+		request->method = HTTP_UNSUPPORTED;
+
+	request->url = troisMot[1];
+	
+	request->major_version = troisMot[2][5]-'0';
+	request->minor_version = troisMot[2][7]-'0';
+
+	if(request->major_version == 1 && (request->minor_version == 1 || request->minor_version == 0))
+		return 0; 
+	return 1;
 }
 
+void skip_headers ( FILE * client , int size) {
+	char * ligne = malloc(size);
+	do {
+		fgets(ligne, size ,client);
+	}while(strcmp(ligne,"\r\n") != 0 && strcmp(ligne,"\n") != 0);
+}
 
+void send_status ( FILE * client , int code , const char * reason_phrase ) {
+	char * phrase = malloc(50);
+	sprintf(phrase, "HTTP/1.1 %d %s\r\n", code , reason_phrase);
+	write ( 1 , phrase , strlen (phrase));
+	fputs(phrase,client);
+}
 
-
-
-
+void send_response ( FILE * client , int code , const char * reason_phrase ,const char * message_body ) {
+	send_status(client, code, reason_phrase);
+	char * phrase = malloc(50);
+	sprintf(phrase, "Connection: close\r\nContent-Length: %zu \r\n\r\n%s",strlen(message_body),message_body);	
+	write ( 1 , phrase , strlen (phrase));
+	fputs(phrase,client);
+}
 
 
 
